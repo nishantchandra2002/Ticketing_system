@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Manage Users - Ticketing System</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<h2>Manage Users</h2>
+
+<!-- Create New User -->
+<form onsubmit="createUser(event)">
+  <input type="text" id="new-username" placeholder="Username" required>
+  <input type="password" id="new-password" placeholder="Password" required>
+  <select id="new-role">
+    <option value="USER">USER</option>
+    <option value="AGENT">AGENT</option>
+    <option value="ADMIN">ADMIN</option>
+  </select>
+  <button type="submit">Create User</button>
+</form>
+
+<h3>All Users</h3>
+<ul id="user-list"></ul>
+
+<button onclick="logout()">Logout</button>
+
+<script src="/js/app.js"></script>
+<script>
+  async function loadUsers() {
+    const users = await apiRequest("/admin/users");
+    const list = document.getElementById("user-list");
+    list.innerHTML = "";
+    users.forEach(u => {
+      const li = document.createElement("li");
+      li.innerHTML = `${u.username} (${u.role})
+        <button onclick="deleteUser(${u.id})">Delete</button>`;
+      list.appendChild(li);
+    });
+  }
+
+  async function createUser(event) {
+    event.preventDefault();
+    const username = document.getElementById("new-username").value;
+    const password = document.getElementById("new-password").value;
+    const role = document.getElementById("new-role").value;
+    await apiRequest("/admin/users", "POST", { username, password, role });
+    alert("User created!");
+    loadUsers();
+  }
+
+  async function deleteUser(id) {
+    await apiRequest(`/admin/users/${id}`, "DELETE");
+    alert("User deleted!");
+    loadUsers();
+  }
+
+  loadUsers();
+</script>
+</body>
+</html>

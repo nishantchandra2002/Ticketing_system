@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reassign Tickets - Ticketing System</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<h2>Reassign Tickets</h2>
+
+<h3>All Tickets</h3>
+<table border="1" id="ticket-table">
+  <thead>
+  <tr>
+    <th>ID</th><th>Title</th><th>Status</th><th>Assigned Agent</th><th>Action</th>
+  </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<h3>Agents</h3>
+<select id="agent-select"></select>
+
+<button onclick="logout()">Logout</button>
+
+<script src="/js/app.js"></script>
+<script>
+  let agents = [];
+
+  async function loadAgents() {
+    agents = await apiRequest("/admin/agents");
+    const select = document.getElementById("agent-select");
+    select.innerHTML = "";
+    agents.forEach(a => {
+      const opt = document.createElement("option");
+      opt.value = a.id;
+      opt.text = a.username;
+      select.appendChild(opt);
+    });
+  }
+
+  async function loadTickets() {
+    const tickets = await apiRequest("/tickets");
+    const tbody = document.getElementById("ticket-table").querySelector("tbody");
+    tbody.innerHTML = "";
+    tickets.forEach(t => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${t.id}</td>
+        <td>${t.title}</td>
+        <td>${t.status}</td>
+        <td>${t.assignedAgent ? t.assignedAgent.username : "Unassigned"}</td>
+        <td><button onclick="reassign(${t.id})">Reassign</button></td>`;
+      tbody.appendChild(row);
+    });
+  }
+
+  async function reassign(ticketId) {
+    const agentId = document.getElementById("agent-select").value;
+    await apiRequest(`/admin/tickets/${ticketId}/assign`, "PUT", { agentId });
+    alert("Ticket reassigned!");
+    loadTickets();
+  }
+
+  loadAgents();
+  loadTickets();
+</script>
+</body>
+</html>

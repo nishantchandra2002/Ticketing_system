@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ticket Detail</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/app.js"></script>
+</head>
+<body>
+<h1 id="ticket-title"></h1>
+<p id="ticket-desc"></p>
+<p>Status: <span id="ticket-status"></span></p>
+
+<h3>Comments</h3>
+<ul id="comments"></ul>
+
+<form onsubmit="addComment(event)">
+  <input type="text" id="comment-text" placeholder="Write comment">
+  <button type="submit">Add</button>
+</form>
+
+<script>
+  async function loadTicketDetail() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+      const ticket = await apiRequest(`/tickets/${id}`);
+      document.getElementById("ticket-title").innerText = ticket.title;
+      document.getElementById("ticket-desc").innerText = ticket.description;
+      document.getElementById("ticket-status").innerText = ticket.status;
+
+      const list = document.getElementById("comments");
+      list.innerHTML = "";
+      ticket.comments.forEach(c => {
+          const li = document.createElement("li");
+          li.innerText = c.text + " (by " + c.user.username + ")";
+          list.appendChild(li);
+      });
+  }
+  async function addComment(event) {
+      event.preventDefault();
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+      const text = document.getElementById("comment-text").value;
+      await apiRequest(`/tickets/${id}/comments`, "POST", { text });
+      loadTicketDetail();
+  }
+  window.onload = loadTicketDetail;
+</script>
+</body>
+</html>
